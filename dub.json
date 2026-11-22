@@ -1,0 +1,18 @@
+{
+	"authors": [
+		"mostypc123"
+	],
+	"license": "MIT",
+	"copyright": "Copyright © 2026, mostypc123",
+	"name": "molms",
+	"stringImportPaths": [
+		"source/css",
+		"source/pages/"
+	],
+	"description": "a lms, i guess",
+	"dependencies": {
+		"vibe-d": "~>0.10.5",
+		"d2sqlite3": "~>1.0.0",
+		"arsd-official:argon2": "~>12.1.3"
+	}
+}

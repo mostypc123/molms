@@ -1,0 +1,71 @@
+import vibe.vibe;
+import logger : log, Log;
+import config : Config;
+
+import css;
+import database;
+
+import pages.profiles;
+import pages.welcome;
+import pages.login;
+import pages.home;
+
+void main(string[] args) {
+  string configFile = "example_config.json";
+  if (args.length > 2 && args[1] == "--config-path") {
+    configFile = args[2];
+  }
+
+  auto router = new URLRouter;
+  log = new Log;
+  auto config = new Config(configFile);
+  auto db = new Database(config.dbFile);
+  if (config.writeLogFile) {
+    log.enableWriteToFile(config.logFile);
+  }
+
+  auto settings = new HTTPServerSettings;
+  settings.bindAddresses = config.bindAdresses;
+  settings.port = config.port;
+  settings.sessionStore = new MemorySessionStore;
+  if (config.devmode != true) {
+    settings.sessionOptions = SessionOption.httpOnly | SessionOption.secure;
+  } else {
+    log.warn("dev mode is enabled");
+  }
+
+  log.info("welcome to molms!");
+
+  router.get("/css/default.css", &defaultCss);
+  router.get("/", &loginPage);
+
+  router.post("/login", (req, res) @trusted {
+    bool onboarding = !db.userExists(req.form["user"]);
+
+    if (db.addUser(req.form["user"], req.form["pass"])) {
+      auto session = res.startSession();
+
+      session.set("user", req.form["user"]);
+
+      if (onboarding) {
+        res.redirect("/welcome");
+      }
+    } else {
+      res.redirect("/");
+    }
+  });
+
+  router.get("/logout", (req, res) @trusted {
+    if (req.session) {
+      res.terminateSession();
+    }
+    res.redirect("/");
+  });
+
+  router.addProfilesPage(db);
+  router.addWelcomePage(db);
+  router.addHomePage(db);
+
+  listenHTTP(settings, router);
+  runEventLoop();
+}
