@@ -31,6 +31,7 @@ string html(string body, string title = "molms") {
       <body>
         <nav>
           <a href="/profiles">Users</a> |
+          <a href="/courses">Courses</a> |
           <a href="/home">Home</a>
         </nav>
         <main style="margin:5px">`
@@ -53,6 +54,9 @@ void handleError(HTTPServerResponse res, string context, Exception e) {
   log.error(context ~ ": " ~ e.msg);
 
   if (!res.headerWritten) {
-    res.writeHtmlBody(html("Something went wrong."), 500);
+    res.writeHtmlBody(html(
+      "Something went wrong.<br>Error message: " ~ e.msg ~
+      "<hr>The owners of the servers are informed of this error."), 500
+    );
   }
 }

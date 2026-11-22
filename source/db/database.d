@@ -4,21 +4,24 @@ import std.typecons : Nullable;
 import sql = d2sqlite3;
 import arsd.argon2;
 
+const string init = import("init.sql");
+
+struct Course {
+  long id;
+  string username;
+  string title;
+  string subtitle;
+  string content;
+  string type;
+  Nullable!int price = Nullable!int.init;
+}
+
 class Database {
   public {
     this(string file) {
       db = sql.Database(file);
 
-      db.run(
-        `CREATE TABLE IF NOT EXISTS users (
-          username TEXT NOT NULL UNIQUE,
-          pwd_hash TEXT NOT NULL,
-          bio TEXT,
-          website TEXT
-        )`
-      );
-
-      db.run("PRAGMA foreign_keys = ON;");
+      db.run(init);
     }
 
     bool userExists(string username) {
@@ -89,9 +92,66 @@ class Database {
 
       return users;
     }
+
+    bool addCourse(
+      string username,
+      string title,
+      string subtitle,
+      string content,
+      string type,
+      Nullable!int price = Nullable!int.init
+    ) {
+      if (!userExists(username)) return false;
+
+      db.execute(
+        "INSERT INTO courses (by_user, price, title, subtitle, content, type) VALUES (?, ?, ?, ?, ?, ?)",
+        username, price, title, subtitle, content, type
+      );
+
+      return db.changes > 0;
+    }
+
+    Nullable!Course getCourseById(long id) {
+      auto rows = db.execute(
+        "SELECT id, by_user, title, subtitle, content, type, price FROM courses WHERE id = ?",
+        id
+      );
+
+      if (rows.empty) return Nullable!Course.init;
+
+      return Nullable!Course(rowToCourse(rows.front));
+    }
+
+    Course[] listCourses() {
+      Course[] courses;
+
+      foreach (row; db.execute(
+        "SELECT id, by_user, title, subtitle, content, type, price FROM courses ORDER BY id"
+      )) {
+        courses ~= rowToCourse(row);
+      }
+
+      return courses;
+    }
   }
 
   private {
     sql.Database db;
+
+    Course rowToCourse(sql.Row row) {
+      Course course;
+      course.id = row.peek!long(0);
+      course.username = row.peek!string(1);
+      course.title = row.peek!string(2);
+      course.subtitle = row.peek!string(3);
+      course.content = row.peek!string(4);
+      course.type = row.peek!string(5);
+
+      if (row.columnType(6) != sql.SqliteType.NULL) {
+        course.price = Nullable!int(row.peek!int(6));
+      }
+
+      return course;
+    }
   }
 }

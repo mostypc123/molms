@@ -1,0 +1,12 @@
+{
+  "type": "text",
+  "price": 0,
+  "title": "Hello World in Python",
+  "subtitle": "The classic example",
+  "content": [
+    "To write hello world to the console in python, use:",
+    "```",
+    "print('hello world')",
+    "```"
+  ]
+}

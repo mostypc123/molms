@@ -1,1 +1,11 @@
-<h1>Welcome, <?data>user</?data></h1>
+<h1>Hello, <?data>user</?data></h1>
+
+<fieldset>
+  <legend>Create a course</legend>
+
+  <ul><li>Upload course JSON</li></ul>
+  <form method="POST" action="/courses/upload" enctype="multipart/form-data">
+    <button type="submit">Publish</button>
+    <input type="file" accept="text/json" name="file">
+  </form>
+</fieldset>

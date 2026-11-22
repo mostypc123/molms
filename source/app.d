@@ -6,6 +6,7 @@ import css;
 import utils : handleError;
 import database;
 
+import pages.courses;
 import pages.profiles;
 import pages.welcome;
 import pages.login;
@@ -80,6 +81,7 @@ void main(string[] args) {
     }
   });
 
+  router.addCourseHandling(db);
   router.addProfilesPage(db);
   router.addWelcomePage(db);
   router.addHomePage(db);
