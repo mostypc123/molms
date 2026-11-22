@@ -6,5 +6,9 @@ import utils;
 const string page = import("login.html");
 
 void loginPage(HTTPServerRequest req, HTTPServerResponse res) {
-  res.writeHtmlBody(html(page));
+  try {
+    res.writeHtmlBody(html(page));
+  } catch (Exception e) {
+    res.handleError("login page", e);
+  }
 }

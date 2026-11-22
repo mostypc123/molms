@@ -1,5 +1,6 @@
 module utils;
 import vibe.vibe;
+import logger : log;
 
 void writeHtmlBody(HTTPServerResponse res, string html, int code = 200) {
   res.statusCode = code;
@@ -27,9 +28,31 @@ string html(string body, string title = "molms") {
         <title>` ~ title ~ `</title>
         <link rel="stylesheet" href="/css/default.css">
       </head>
-      <body>`
-        ~ body ~
-      `</body>
+      <body>
+        <nav>
+          <a href="/profiles">Users</a> |
+          <a href="/home">Home</a>
+        </nav>
+        <main style="margin:5px">`
+          ~ body ~
+      ` </main>
+      </body>
     </html>
   `);
+}
+
+string sessionUser(HTTPServerRequest req) {
+  if (!req.session) {
+    return "";
+  }
+
+  return req.session.get!string("user", "");
+}
+
+void handleError(HTTPServerResponse res, string context, Exception e) {
+  log.error(context ~ ": " ~ e.msg);
+
+  if (!res.headerWritten) {
+    res.writeHtmlBody(html("Something went wrong."), 500);
+  }
 }

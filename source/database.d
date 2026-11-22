@@ -1,3 +1,5 @@
+module database;
+
 import std.typecons : Nullable;
 import sql = d2sqlite3;
 import arsd.argon2;
@@ -31,7 +33,12 @@ class Database {
       if (rows.empty) return false;
 
       string stored = rows.front["pwd_hash"].as!string;
-      return verify(stored, pwd);
+
+      try {
+        return verify(stored, pwd);
+      } catch (Exception e) {
+        return false;
+      }
     }
 
     bool addUser(string username, string unhashed_pwd) {
@@ -71,6 +78,16 @@ class Database {
       if (rows.empty) return Nullable!string.init;
 
       return Nullable!string(rows.front.peek!string(0));
+    }
+
+    string[] listUsers() {
+      string[] users;
+
+      foreach (row; db.execute("SELECT username FROM users ORDER BY username")) {
+        users ~= row["username"].as!string;
+      }
+
+      return users;
     }
   }
 

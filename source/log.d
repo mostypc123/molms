@@ -32,31 +32,28 @@ class Log {
     string logFile;
 
     void updateLogFile(string type, string msg) {
-      if (writeLogsToFile) {
+      if (!writeLogsToFile) {
+        return;
+      }
+
+      try {
         if (!logFile.exists()) {
           logFile.write("{}");
         }
 
-        string curLogFile;
-        try {
-          curLogFile = readText(logFile);
-        } catch (FileException e) {
-          error("Failed to read log file " ~ e.msg);
-          return;
-        }
-
-        auto parsedJson = parseJSON(curLogFile);
+        auto parsedJson = parseJSON(readText(logFile));
 
         if (!("logs" in parsedJson)) {
           parsedJson.object["logs"] = JSONValue((JSONValue[]).init);
-        } else {
-          if (parsedJson["logs"].type != JSONType.array) {
-            error(logFile ~ " has broken json: logs is not an array");
-          }
+        } else if (parsedJson["logs"].type != JSONType.array) {
+          writeln(logFile ~ " has broken json: logs is not an array");
+          return;
         }
 
         parsedJson["logs"].array ~= JSONValue(["type": type, "message": msg]);
         logFile.write(parsedJson.toPrettyString());
+      } catch (Exception e) {
+        writeln("Failed to update log file: " ~ e.msg);
       }
     }
   }

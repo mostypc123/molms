@@ -3,6 +3,7 @@ import logger : log, Log;
 import config : Config;
 
 import css;
+import utils : handleError;
 import database;
 
 import pages.profiles;
@@ -40,26 +41,43 @@ void main(string[] args) {
   router.get("/", &loginPage);
 
   router.post("/login", (req, res) @trusted {
-    bool onboarding = !db.userExists(req.form["user"]);
+    try {
+      string user = req.form.get("user", "");
+      string pass = req.form.get("pass", "");
 
-    if (db.addUser(req.form["user"], req.form["pass"])) {
-      auto session = res.startSession();
-
-      session.set("user", req.form["user"]);
-
-      if (onboarding) {
-        res.redirect("/welcome");
+      if (user.length == 0 || pass.length == 0) {
+        res.redirect("/");
+        return;
       }
-    } else {
-      res.redirect("/");
+
+      bool onboarding = !db.userExists(user);
+
+      if (db.addUser(user, pass)) {
+        auto session = res.startSession();
+
+        session.set("user", user);
+
+        res.redirect(onboarding ? "/welcome" : "/home");
+      } else {
+        res.redirect("/");
+      }
+    } catch (Exception e) {
+      log.error("login failed: " ~ e.msg);
+      if (!res.headerWritten) {
+        res.redirect("/");
+      }
     }
   });
 
   router.get("/logout", (req, res) @trusted {
-    if (req.session) {
-      res.terminateSession();
+    try {
+      if (req.session) {
+        res.terminateSession();
+      }
+      res.redirect("/");
+    } catch (Exception e) {
+      res.handleError("logout", e);
     }
-    res.redirect("/");
   });
 
   router.addProfilesPage(db);

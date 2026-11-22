@@ -8,20 +8,41 @@ const string page = import("welcome.html");
 
 void addWelcomePage(URLRouter router, Database db) {
   router.get("/welcome", (req, res) @trusted {
-    res.writeHtmlBody(html(page));
+    try {
+      if (req.sessionUser().length == 0) {
+        res.redirect("/");
+        return;
+      }
+
+      res.writeHtmlBody(html(page));
+    } catch (Exception e) {
+      res.handleError("welcome", e);
+    }
   });
 
   router.post("/welcome/send", (req, res) @trusted {
-    string user = req.session.get!string("user");
+    try {
+      string user = req.sessionUser();
 
-    if (req.form["bio"] != "") {
-      db.setProfileField(user, "bio", req.form["bio"]);
+      if (user.length == 0) {
+        res.redirect("/");
+        return;
+      }
+
+      string bio = req.form.get("bio", "");
+      string url = req.form.get("url", "");
+
+      if (bio != "") {
+        db.setProfileField(user, "bio", bio);
+      }
+
+      if (url != "") {
+        db.setProfileField(user, "website", url);
+      }
+
+      res.redirect("/home");
+    } catch (Exception e) {
+      res.handleError("welcome send", e);
     }
-
-    if (req.form["url"] != "") {
-      db.setProfileField(user, "url", req.form["url"]);
-    }
-
-    res.redirect("/home");
   });
 }

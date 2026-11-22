@@ -17,7 +17,12 @@ class Config {
         return;
       }
 
-      json = parseJSON(content);
+      try {
+        json = parseJSON(content);
+      } catch (JSONException e) {
+        log.error("Failed to parse config file " ~ e.msg);
+        return;
+      }
 
       try {
         port = json["host"]["port"].get!ushort;
