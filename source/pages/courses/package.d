@@ -59,7 +59,7 @@ void addCourseHandling(URLRouter router, Database db) {
 
       auto course = courseNullable.get();
 
-      if (!course.price.isNull || course.price.get > 0) {
+      if (course.price.get(0) > 0) {
         res.writeHtmlBody(html("This course is paid - " ~ to!string(course.price) ~ " euros. (todo: implement payment)"));
       }
 
